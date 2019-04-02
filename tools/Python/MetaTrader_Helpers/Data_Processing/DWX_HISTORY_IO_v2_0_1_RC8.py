@@ -82,15 +82,16 @@ class DWX_MT_HISTORY_IO():
             print('[ERROR] Invalid filename!')
             quit()
             
-        _seek = 0
-        _open_time = []
-        _open_price = []
-        _low_price = []
-        _high_price = []
-        _close_price = []
-        _volume = []
-        _spread = []
-        _real_volume = []
+        _df = pd.DataFrame({
+                 'open_time': [], 
+                 'open': [],
+                 'high': [],
+                 'low': [],
+                 'close': [],
+                 'volume': [],
+                 'spread': [],
+                 'real_volume': []
+        })
     
         with open(_filename.format(_symbol, _timeframe), 'rb') as f:
             
@@ -112,14 +113,14 @@ class DWX_MT_HISTORY_IO():
                         print('[INFO] Extracting Record {} of {} from {} HST archive'.format(_counter, _num_bars, _symbol))
                     
                     _bar = struct.unpack(self._HST_BYTE_FORMAT, _buf)
-                    _open_time.append(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(_bar[0])))
-                    _open_price.append(_bar[1])
-                    _high_price.append(_bar[2])
-                    _low_price.append(_bar[3])
-                    _close_price.append(_bar[4])
-                    _volume.append(_bar[5])  
-                    _spread.append(_bar[6])
-                    _real_volume.append(_bar[7])
+                    _df['open_time'].append(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(_bar[0])))
+                    _df['open'].append(_bar[1])
+                    _df['high'].append(_bar[2])
+                    _df['low'].append(_bar[3])
+                    _df['close'].append(_bar[4])
+                    _df['volume'].append(_bar[5])  
+                    _df['spread'].append(_bar[6])
+                    _df['real_volume'].append(_bar[7])
                     
                     _counter += 1
                     
@@ -127,16 +128,7 @@ class DWX_MT_HISTORY_IO():
                     _buf = f.read(self._HEADER_BYTES)
                     _seek += self._HEADER_BYTES
                 
-        _df = pd.DataFrame.from_dict(
-                {'open_time': _open_time, 
-                 'open': _open_price,
-                 'high': _high_price,
-                 'low': _low_price,
-                 'close': _close_price,
-                 'volume': _volume,
-                 'spread': _spread,
-                 'real_volume': _real_volume}
-                ).set_index('open_time')
+        _df = _df.set_index('open_time')
         
         if _verbose is True:
             print(_df)
